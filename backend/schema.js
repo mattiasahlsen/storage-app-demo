@@ -2,10 +2,13 @@ const gql = require('graphql-tag')
 
 const schema = gql`
   type Query {
-    storage(id: String!): Storage
+    storage(username: String!): Storage
   }
   type Mutation {
-    createStorage(pickup: PointInput, dropoff: PointInput): Storage
+    createStorage(
+      pickup: PointInput!,
+      username: String!
+    ): Storage
   }
 
   type Point {

@@ -6,6 +6,7 @@ import {
   Text as NormalText,
   TextInput,
 } from 'react-native';
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-community/async-storage';
 import ApolloClient, { gql } from 'apollo-boost';
 import { ApolloProvider } from '@apollo/react-hooks';
@@ -13,9 +14,9 @@ import Modal from 'react-native-modal';
 import * as Font from 'expo-font';
 
 import Text, { MediumText, LightItalicText } from './components/Text'
-import Menu from './components/Menu'
-import Map from './components/Map'
 import Button, { ShadowButton } from './components/Button'
+
+import Home from './screens/Home'
 
 import style, { colors } from './styles'
 
@@ -26,45 +27,34 @@ const client = new ApolloClient({
 
 const USERNAME_KEY = 'username'
 
-// graphql queries
-
-
 export default function App() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null);
+
   const [username, setUsername] = useState(null)
   const [tempUsername, setTempUsername] = useState('')
+  const [loggedIn, setLoggedIn] = useState(false)
+
   function login() {
     setUsername(tempUsername)
     AsyncStorage.setItem(USERNAME_KEY, tempUsername)
+    setLoggedIn(true)
   }
   function logout() {
-    setUsername(null)
     setTempUsername('')
     AsyncStorage.removeItem(USERNAME_KEY)
+    setLoggedIn(false)
   }
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(true)
-
-  const [storage, setStorage] = useState(null)
-
-  // get a location on the map from the user through a promise
-  // that resolves when the user clicks on the map
-  const [pickedLocation, setPickedLocation] = useState(null)
-  const [locationPromise, setLocationPromise] = useState(null)
-  const createLocationPromise = () => {
-    if (locationPromise) locationPromise.reject()
-
-    let res
-    let rej
-    const promise = new Promise((resolve, reject) => {
-      res = resolve
-      rej = reject
-    })
-    promise.resolve = res
-    promise.reject = rej
-    setLocationPromise(promise)
-    return promise
+  const [myLocation, setMyLocation] = useState(null);
+  async function getMyLocation() {
+    let { status } = await Location.requestPermissionsAsync();
+    if (status !== 'granted') {
+      setError('Appen måste ha tillgång till din plats, gå till inställningar.');
+    } else {
+      let location = await Location.getCurrentPositionAsync({});
+      setMyLocation(location);
+    }
   }
 
   async function loadResources() {
@@ -83,72 +73,47 @@ export default function App() {
       ])
     } catch (err) {
       setError(err)
-    } finally {
-      setLoading(false)
     }
   }
-
   // check if the user is logged in already
   async function getUsername() {
     try {
       const myUsername = await AsyncStorage.getItem(USERNAME_KEY)
-      if (myUsername) setUsername(myUsername)
+      if (myUsername) {
+        setUsername(myUsername)
+        setLoggedIn(true)
+      }
     } catch (err) {
       setError(err)
     }
   }
 
   useEffect(() => {
-    loadResources()
-    getUsername()
+    Promise.all([
+      loadResources(),
+      getUsername(),
+      getMyLocation(),
+    ]).finally(() => {
+      setLoading(false)
+    })
   }, []);
 
-  // create "map-press" promise that resolves when
-  // the user presses the map
-  async function getMapLocation() {
-    const location = await createLocationPromise()
-    setLocationPromise(null)
-    setPickedLocation(location)
-    return location
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <NormalText>Laddar...</NormalText>
+      </View>
+    )
   }
-  // press handler for map press, resolves the promise
-  function mapPress(location) {
-    if (locationPromise) {
-      locationPromise.resolve(location)
-    }
-  }
-
-  function createStorage(newStorage) {
-    setStorage(newStorage)
-    setPickedLocation(null)
-    setMenuOpen(false)
-  }
-  function cancelNewStorage() {
-    setPickedLocation(null)
-  }
-
-  if (loading) return (
-    <View style={styles.container}>
-      <NormalText>Laddar...</NormalText>
-    </View>
-  )
-
-  const menuIsOpen = !locationPromise && menuOpen
 
   return (
     <ApolloProvider client={client}>
       <View style={styles.container}>
-        { username &&
-          <View style={[styles.username, style.boxShadow]}>
-            <Text>Inloggad som</Text>
-            <MediumText>{username}</MediumText>
-          </View>
-        }
-
         <Modal
-          isVisible={!username}
+          isVisible={!loggedIn}
           style={styles.login}
           animationOut={'slideOutLeft'}
+          onModalShow={() => setUsername(null)}
         >
           <View style={{marginVertical: 10, alignItems: 'center'}}>
             <View style={{
@@ -198,37 +163,15 @@ export default function App() {
           </View>
         </Modal>
 
-        {
-          locationPromise &&
-          <View style={[styles.modal, style.boxShadow]}>
-            <Text>Tryck på kartan där du vill att dina saker blir upphämtade.</Text>
-            <View style={{alignItems: 'flex-end', marginTop: 10, marginRight: 5}}>
-              <Button onPress={() => locationPromise.resolve(undefined)}>
-                <Text>Avbryt</Text>
-              </Button>
-            </View>
-          </View>
+        {username ?
+          <Home
+            logout={logout}
+            username={username}
+            myLocation={myLocation}
+          /> :
+          <NormalText>Logga in...</NormalText>
         }
 
-        <Map
-          closeMenu={() => setMenuOpen(false)}
-          onPress={locationPromise ? mapPress : () => setMenuOpen(false)}
-          disabled={menuIsOpen}
-          storage={storage}
-          marker={pickedLocation}
-        />
-
-        <Menu
-          getLocation={getMapLocation}
-          createStorage={createStorage}
-          open={menuIsOpen}
-          toggle={() => setMenuOpen(!menuOpen)}
-          cancelNewStorage={cancelNewStorage}
-          storage={storage}
-          removeStorage={() => setStorage(null)}
-          username={username}
-          logout={logout}
-        />
       </View>
     </ApolloProvider>
   );
@@ -243,30 +186,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  mapStyle: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
-
-  menu: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-  },
-
   error: {
     backgroundColor: colors.lighter,
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  info: {
-    marginTop: 40,
-    backgroundColor: colors.lighter,
-    padding: 20,
-    borderRadius: 10,
   },
   modal: {
     position: 'absolute',
@@ -277,11 +201,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lighter,
     zIndex: 3,
     padding: 20,
-  },
-  marker: {
-    backgroundColor: colors.white,
-    paddingHorizontal: 5,
-    borderRadius: 10,
   },
 
   login: {
@@ -303,18 +222,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  username: {
-    position: 'absolute',
-    right: 10,
-    top: 30,
-    backgroundColor: colors.white,
-    zIndex: 2,
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
   title: {
     fontSize: 40,
     textAlign: 'center',
-  }
+  },
 });

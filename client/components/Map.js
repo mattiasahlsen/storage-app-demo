@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import * as Location from 'expo-location';
 import { Entypo } from '@expo/vector-icons';
 
 import Text, { MediumText } from './Text'
@@ -22,22 +21,7 @@ const latLng = location => ({
 
 export default function Map(props) {
   const [error, setError] = useState(null);
-  const [myLocation, setMyLocation] = useState(null);
   const [map, setMap] = useState(null)
-
-  async function getMyLocation() {
-    let { status } = await Location.requestPermissionsAsync();
-    if (status !== 'granted') {
-      setError('Appen måste ha tillgång till din plats, gå till inställningar.');
-    } else {
-      let location = await Location.getCurrentPositionAsync({});
-      setMyLocation(location);
-    }
-  }
-  useEffect(() => {
-    getMyLocation()
-  }, []);
-
 
   function navigateTo(coord) {
     if (map) {
@@ -59,7 +43,6 @@ export default function Map(props) {
     }
   }, [props.storage])
 
-  if (!myLocation) return <Text>Väntar på tillgång till plats.</Text>
   if (error) return <Text>{(error && error.message) || error}</Text>
 
   if (props.marker) console.log(props.marker)
@@ -73,7 +56,7 @@ export default function Map(props) {
         followsUserLocation={false}
         showsMyLocationButton={false}
         initialRegion={{
-          ...latLng(myLocation),
+          ...latLng(props.myLocation),
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         }}

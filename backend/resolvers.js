@@ -11,8 +11,8 @@ const randomId = () => {
 
 const resolvers = {
   Query: {
-    async storage(parent, { id }) {
-      const storage = await database.getStorage(id)
+    async storage(parent, { username }) {
+      const storage = await database.getStorage(username)
       return storage
     }
   },

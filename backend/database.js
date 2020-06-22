@@ -35,12 +35,12 @@ async function createStorage({ id, pickup, username }) {
   return storage
 }
 
-async function getStorage(id) {
+async function getStorage(username) {
   const data = await promisify(callback => {
     docClient.get({
       TableName: 'Storage',
       Key: {
-        id,
+        username,
       }
     }, callback)
   })

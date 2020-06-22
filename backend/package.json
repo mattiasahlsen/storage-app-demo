@@ -1,0 +1,25 @@
+{
+  "name": "aws-node-graphql-related-types",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "start": "serverless dynamodb install && env-cmd -f ../config/.env.local serverless offline start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-lambda": "^2.14.4",
+    "aws-sdk": "^2.697.0",
+    "aws-xray-sdk": "^3.1.0",
+    "graphql": "^15.1.0",
+    "graphql-tag": "^2.10.3",
+    "serverless-dynamodb-client": "^0.0.2",
+    "serverless-dynamodb-local": "^0.2.39",
+    "serverless-offline": "^6.4.0"
+  },
+  "devDependencies": {
+    "env-cmd": "^10.1.0"
+  }
+}

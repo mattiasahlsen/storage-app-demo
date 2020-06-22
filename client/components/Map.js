@@ -20,12 +20,11 @@ const latLng = location => ({
 });
 
 export default function Map(props) {
-  const [error, setError] = useState(null);
   const [map, setMap] = useState(null)
 
   function navigateTo(coord) {
     if (map) {
-      props.closeMenu && props.closeMenu()
+      props.onAnimate && props.onAnimate()
       map.animateCamera({ center: coord }, 100)
     }
   }
@@ -42,8 +41,6 @@ export default function Map(props) {
       props.storage.navigateTo = () => navigateTo(props.storage.location)
     }
   }, [props.storage])
-
-  if (error) return <Text>{(error && error.message) || error}</Text>
 
   if (props.marker) console.log(props.marker)
 

@@ -10,13 +10,14 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-community/async-storage';
 import ApolloClient, { gql } from 'apollo-boost';
 import { ApolloProvider } from '@apollo/react-hooks';
-import Modal from 'react-native-modal';
 import * as Font from 'expo-font';
 
 import Text, { MediumText, LightItalicText } from './components/Text'
 import Button, { ShadowButton } from './components/Button'
+import Error from './components/Error'
 
 import Home from './screens/Home'
+import Login from './screens/Login'
 
 import style, { colors } from './styles'
 
@@ -29,19 +30,17 @@ const USERNAME_KEY = 'username'
 
 export default function App() {
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null);
+  const [error, setError] = useState();
 
   const [username, setUsername] = useState(null)
-  const [tempUsername, setTempUsername] = useState('')
   const [loggedIn, setLoggedIn] = useState(false)
 
-  function login() {
-    setUsername(tempUsername)
-    AsyncStorage.setItem(USERNAME_KEY, tempUsername)
+  function login(myUsername) {
+    setUsername(myUsername)
+    AsyncStorage.setItem(USERNAME_KEY, myUsername)
     setLoggedIn(true)
   }
   function logout() {
-    setTempUsername('')
     AsyncStorage.removeItem(USERNAME_KEY)
     setLoggedIn(false)
   }
@@ -76,7 +75,7 @@ export default function App() {
     }
   }
   // check if the user is logged in already
-  async function getUsername() {
+  async function loadUsername() {
     try {
       const myUsername = await AsyncStorage.getItem(USERNAME_KEY)
       if (myUsername) {
@@ -91,7 +90,7 @@ export default function App() {
   useEffect(() => {
     Promise.all([
       loadResources(),
-      getUsername(),
+      loadUsername(),
       getMyLocation(),
     ]).finally(() => {
       setLoading(false)
@@ -105,63 +104,17 @@ export default function App() {
       </View>
     )
   }
+  if (error) return <Error error={error}/>
 
   return (
     <ApolloProvider client={client}>
       <View style={styles.container}>
-        <Modal
+
+        <Login
           isVisible={!loggedIn}
-          style={styles.login}
-          animationOut={'slideOutLeft'}
           onModalShow={() => setUsername(null)}
-        >
-          <View style={{marginVertical: 10, alignItems: 'center'}}>
-            <View style={{
-              borderBottomWidth: 1,
-              borderBottomColor: 'rgba(0, 0, 0, 0.4)',
-            }}>
-              <MediumText style={styles.title}>
-                Vinden
-              </MediumText>
-            </View>
-            <LightItalicText style={{fontSize: 24, textAlign: 'center'}}>
-              On the fly
-            </LightItalicText>
-          </View>
-
-          <TextInput
-            style={styles.textInput}
-            onChangeText={text => setTempUsername(text)}
-            value={tempUsername}
-            placeholder={'Användarnamn'}
-          />
-          <ShadowButton
-            style={{marginTop: 10}}
-            onPress={login}
-          >
-            <MediumText
-              style={{textAlign: 'center'}}
-            >LOGGA IN</MediumText>
-          </ShadowButton>
-
-        </Modal>
-
-        <Modal
-          isVisible={!!error}
-          style={{
-            ...style.boxShadow,
-            zIndex: 5,
-          }}
-          swipeDirection={['up', 'down']}
-          swipeThreshold={30}
-          onSwipeComplete={() => setError(null)}
-          hasBackdrop={true}
-        >
-          <View style={styles.error}>
-            <MediumText style={{fontSize: 24}}>Oj, det blev ett fel</MediumText>
-            <Text>{(error && error.message) || error}</Text>
-          </View>
-        </Modal>
+          login={login}
+        />
 
         {username ?
           <Home
@@ -184,46 +137,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     width: '100%',
-  },
-
-  error: {
-    backgroundColor: colors.lighter,
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modal: {
-    position: 'absolute',
-    top: 30,
-    left: 10,
-    right: 10,
-    borderRadius: 10,
-    backgroundColor: colors.lighter,
-    zIndex: 3,
-    padding: 20,
-  },
-
-  login: {
-    margin: 0,
-    position: 'absolute',
-    backgroundColor: colors.white,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-  },
-  textInput: {
-    backgroundColor: colors.light,
-    borderRadius: 5,
-    padding: 10,
-    fontSize: 18,
-    color: colors.dark,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  title: {
-    fontSize: 40,
-    textAlign: 'center',
   },
 });

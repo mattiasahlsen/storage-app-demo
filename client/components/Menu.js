@@ -21,7 +21,7 @@ export function Menu(props) {
   const [gettingStorage, setGettingStorage] = useState(false)
 
   const menuHeight = Dimensions.get('window').height * 0.6
-  const offset = menuHeight - 50
+  const offset = menuHeight - 60
 
   const yAnim = useRef(new Animated.Value(offset)).current
   const snapBack = () => {

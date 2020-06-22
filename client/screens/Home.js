@@ -118,7 +118,7 @@ export default function Home(props) {
 
       <Map
         loadingEnabled={true}
-        closeMenu={() => setMenuOpen(false)}
+        onAnimate={() => setMenuOpen(false)}
         onPress={locationPromise ? mapPress : () => setMenuOpen(false)}
         disabled={menuIsOpen}
         storage={storage}
@@ -151,31 +151,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
     padding: 20,
   },
-  marker: {
-    backgroundColor: colors.white,
-    paddingHorizontal: 5,
-    borderRadius: 10,
-  },
 
-  login: {
-    margin: 0,
-    position: 'absolute',
-    backgroundColor: colors.white,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-  },
-  textInput: {
-    backgroundColor: colors.light,
-    borderRadius: 5,
-    padding: 10,
-    fontSize: 18,
-    color: colors.dark,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
   username: {
     position: 'absolute',
     right: 10,
@@ -186,8 +162,4 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 40,
-    textAlign: 'center',
-  }
 });

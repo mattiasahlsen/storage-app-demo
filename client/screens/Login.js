@@ -13,7 +13,7 @@ import Button, { ShadowButton } from '../components/Button'
 import style, { colors } from '../styles'
 
 export default function Login(props) {
-  const [tempUsername, setTempUsername] = useState('')
+  const [username, setUsername] = useState('')
 
   return (
     <Modal
@@ -39,13 +39,13 @@ export default function Login(props) {
 
       <TextInput
         style={styles.textInput}
-        onChangeText={text => setTempUsername(text)}
-        value={tempUsername}
+        onChangeText={text => setUsername(text)}
+        value={username}
         placeholder={'Användarnamn'}
       />
       <ShadowButton
         style={{marginTop: 10}}
-        onPress={props.login}
+        onPress={() => props.login(username)}
       >
         <MediumText
           style={{textAlign: 'center'}}

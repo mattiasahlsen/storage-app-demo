@@ -11,7 +11,6 @@ import style, { colors } from '../styles'
 export default function Error(props) {
   const error = props.error
 
-  console.log(error)
   return (
     <View style={styles.container}>
       <MediumText style={{fontSize: 24}}>Oj, det blev ett fel</MediumText>

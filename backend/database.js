@@ -15,7 +15,6 @@ if (process.env.NODE_ENV === 'production') {
 const promisify = foo =>
   new Promise((resolve, reject) => {
     foo((error, result) => {
-      console.log('callback called')
       if (error) {
         reject(error);
       } else {
@@ -26,6 +25,7 @@ const promisify = foo =>
 
 async function createStorage({ id, pickup, username }) {
   const storage = {id, pickup, username}
+  console.log('creating storage in database', storage)
   const data = await promisify(callback => {
     docClient.put({
       TableName: 'Storage',
@@ -47,7 +47,21 @@ async function getStorage(username) {
   return data.Item
 }
 
+async function deleteStorage(username) {
+  const data = await promisify(callback => {
+    docClient.delete({
+      TableName: 'Storage',
+      Key: {
+        username,
+      }
+    }, callback)
+  })
+  console.log('deleted item, ', data)
+  return true
+}
+
 module.exports = {
   createStorage,
   getStorage,
+  deleteStorage,
 }

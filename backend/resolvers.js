@@ -17,11 +17,16 @@ const resolvers = {
     }
   },
   Mutation: {
-    async createStorage (parent, { pickup, username }) {
+    async createStorage(parent, { pickup, username }) {
       const id = randomId()
       const storage = { id, pickup, username }
-      const s = await database.createStorage(storage)
-      return s
+      console.log('creating storage', storage)
+      const myStorage = await database.createStorage(storage)
+      return myStorage
+    },
+    async deleteStorage(parent, { username }) {
+      const success = await database.deleteStorage(username)
+      return success
     }
   }
 }

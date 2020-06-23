@@ -42,7 +42,8 @@ export default function Map(props) {
     }
   }, [props.storage])
 
-  if (props.marker) console.log(props.marker)
+  console.log('in map', props.storage)
+ if (props.storage) console.log(props.storage.time)
 
   return (
     <View>

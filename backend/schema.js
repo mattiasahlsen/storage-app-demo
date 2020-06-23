@@ -9,17 +9,18 @@ const schema = gql`
       pickup: PointInput!,
       username: String!
     ): Storage
+    deleteStorage(username: String!): Boolean
   }
 
   type Point {
-    x: Float!
-    y: Float!
-    time: Int
+    longitude: Float!
+    latitude: Float!
+    time: Float!
   }
   input PointInput {
-    x: Float!
-    y: Float!
-    time: Int
+    longitude: Float!
+    latitude: Float!
+    time: Float!
   }
 
   type Storage {

@@ -109,7 +109,7 @@ export default function NewStorage(props) {
         <ShadowButton
           onPress={createStorage}
           style={{padding: 10, marginTop: 10, marginHorizontal: 5}}
-          disabled={!time}
+          disabled={!time || !location}
         >
           <MediumText style={{textAlign: 'center'}}>Boka förvaring</MediumText>
         </ShadowButton>

@@ -5,6 +5,7 @@ import {
   Dimensions,
 } from 'react-native';
 import ApolloClient, { gql } from 'apollo-boost';
+import { useQuery, useMutation } from '@apollo/react-hooks';
 import * as Font from 'expo-font';
 
 import Text, { MediumText, LightItalicText } from '../components/Text'
@@ -21,21 +22,27 @@ const GET_STORAGE = gql`
       id
       username
       pickup {
-        x
-        y
+        longitude
+        latitude
         time
       }
     }
   }
 `
+const DELETE_STORAGE = gql`
+  mutation deleteStorage($username: String!) {
+    deleteStorage(username: $username)
+  }
+`
+
 const SET_STORAGE = gql`
-  query setStorage($username: String!, $pickup: PointInput!) {
+  mutation setStorage($username: String!, $pickup: PointInput!) {
     createStorage(username: $username, pickup: $pickup) {
       id
       username
       pickup {
-        x
-        y
+        longitude
+        latitude
         time
       }
     }
@@ -44,10 +51,61 @@ const SET_STORAGE = gql`
 
 
 export default function Home(props) {
-  //const { loadingQuery, errorQuery, data } = useQuery(GET_STORAGE);
-
   const [menuOpen, setMenuOpen] = useState(true)
   const [storage, setStorage] = useState(null)
+
+  // queries
+  const { loadingGet, errorGet, data: queryResponse } = useQuery(GET_STORAGE, {
+    variables: { username: props.username},
+    skip: !!storage,
+  });
+  useEffect(() => {
+    if (queryResponse && queryResponse.storage) {
+      console.log('new query response')
+      console.log(queryResponse)
+      const newStorage = {
+        location: {
+          coord: {
+            longitude: queryResponse.storage.pickup.longitude,
+            latitude: queryResponse.storage.pickup.latitude,
+          },
+        },
+        time: new Date(queryResponse.storage.pickup.time),
+      }
+      setStorage(newStorage)
+    }
+  }, [queryResponse])
+
+  const [updateStorage, { loadingSet, errorSet, data: createdStorage }] =
+    useMutation(SET_STORAGE)
+  const [deleteStorage, { loadingDelete, errorDelete, data: deleteResponse }] =
+    useMutation(DELETE_STORAGE, { variables: { username: props.username } })
+
+  useEffect(() => {
+    if (storage) {
+      const pickup = storage && {
+        longitude: storage.location.coord.longitude,
+        latitude: storage.location.coord.latitude,
+        time: storage.time.getTime(),
+      }
+      console.log(pickup)
+      updateStorage({
+        variables: {
+          username: props.username,
+          pickup,
+        },
+      });
+    }
+  }, [storage])
+
+  async function removeStorage() {
+    setStorage(null)
+    deleteStorage()
+  }
+
+  console.log('new storage', createdStorage)
+  console.log('error set: ', errorSet)
+  console.log('loading set', loadingSet)
 
   // get a location on the map from the user through a promise
   // that resolves when the user clicks on the map
@@ -133,7 +191,7 @@ export default function Home(props) {
         toggle={() => setMenuOpen(!menuOpen)}
         cancelNewStorage={cancelNewStorage}
         storage={storage}
-        removeStorage={() => setStorage(null)}
+        removeStorage={removeStorage}
         logout={props.logout}
       />
     </View>

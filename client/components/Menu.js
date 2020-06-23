@@ -1,4 +1,3 @@
-//import { AppLoading } from 'expo'
 import React, { useState, useEffect, useRef } from 'react'
 import {
   View,
@@ -6,16 +5,17 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Dimensions,
-  TouchableOpacity,
 } from 'react-native';
+import { gql } from 'apollo-boost';
 import Button, { ShadowButton } from './Button';
 import Text, { MediumText } from './Text';
 import { Entypo } from '@expo/vector-icons';
 
 import NewStorage from './NewStorage';
+import Storage from './Storage';
 
-import style, { colors } from '../styles'
-import { toTimeString } from '../lib'
+import style, { colors } from '../styles';
+
 
 export function Menu(props) {
   const [gettingStorage, setGettingStorage] = useState(false)
@@ -37,8 +37,8 @@ export function Menu(props) {
   }, [props.open])
 
 
-  function createStorage(storage) {
-    props.createStorage(storage)
+  function onCreateStorage(storage) {
+    props.onCreateStorage(storage)
     setGettingStorage(false)
   }
   function getStorage() {
@@ -53,6 +53,12 @@ export function Menu(props) {
   function cancelNewStorage() {
     setGettingStorage(false)
     props.cancelNewStorage()
+  }
+
+
+
+  function navigateTo(location) {
+    props.navigateTo && props.navigateTo(location.coord)
   }
 
   return (
@@ -85,34 +91,24 @@ export function Menu(props) {
         {
           gettingStorage ?
             <NewStorage
-              onComplete={createStorage}
+              onComplete={onCreateStorage}
               getLocation={getLocation}
               cancel={cancelNewStorage}
+              username={props.username}
+              navigateTo={navigateTo}
             /> :
             (
               props.storage ?
               <View>
                 <MediumText>Förvaring</MediumText>
-                <View style={[style.row, styles.storage]}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Text style={{marginHorizontal: 5}}>
-                      {toTimeString(props.storage.time)}
-                    </Text>
-                    <TouchableOpacity onPress={props.storage.location.navigateTo}>
-                      <Entypo
-                        name={'location-pin'}
-                        size={30}
-                        color={colors.darkGray}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  <Button
-                    onPress={props.removeStorage}
-                    style={{backgroundColor: colors.lighter}}
-                  >
-                    <Text>Ta bort</Text>
-                  </Button>
-                </View>
+
+                <Storage
+                  navigateTo={navigateTo}
+                  storage={props.storage}
+                  onDeleteStorage={props.onDeleteStorage}
+                  username={props.username}
+                />
+
                 <Text style={{marginTop: 10, textAlign: 'center'}}>
                   Du kan för tillfället bara förvara en sak åt gången.
                 </Text>

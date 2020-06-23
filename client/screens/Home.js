@@ -4,7 +4,7 @@ import {
   View,
   Dimensions,
 } from 'react-native';
-import ApolloClient, { gql } from 'apollo-boost';
+import { gql } from 'apollo-boost';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import * as Font from 'expo-font';
 
@@ -12,6 +12,7 @@ import Text, { MediumText, LightItalicText } from '../components/Text'
 import Menu from '../components/Menu'
 import Map from '../components/Map'
 import Button, { ShadowButton } from '../components/Button'
+import Info from '../components/Info'
 
 import style, { colors } from '../styles'
 
@@ -29,40 +30,21 @@ const GET_STORAGE = gql`
     }
   }
 `
-const DELETE_STORAGE = gql`
-  mutation deleteStorage($username: String!) {
-    deleteStorage(username: $username)
-  }
-`
 
-const SET_STORAGE = gql`
-  mutation setStorage($username: String!, $pickup: PointInput!) {
-    createStorage(username: $username, pickup: $pickup) {
-      id
-      username
-      pickup {
-        longitude
-        latitude
-        time
-      }
-    }
-  }
-`
-
+let navigateTo
 
 export default function Home(props) {
   const [menuOpen, setMenuOpen] = useState(true)
   const [storage, setStorage] = useState(null)
 
-  // queries
-  const { loadingGet, errorGet, data: queryResponse } = useQuery(GET_STORAGE, {
-    variables: { username: props.username},
-    skip: !!storage,
-  });
+  // fetch storage from database
+  const { loadingGet, errorGet, data: queryResponse, refetch: reloadStorage }
+    = useQuery(GET_STORAGE, {
+      variables: { username: props.username},
+    });
+
   useEffect(() => {
     if (queryResponse && queryResponse.storage) {
-      console.log('new query response')
-      console.log(queryResponse)
       const newStorage = {
         location: {
           coord: {
@@ -73,39 +55,20 @@ export default function Home(props) {
         time: new Date(queryResponse.storage.pickup.time),
       }
       setStorage(newStorage)
+    } else if (queryResponse) {
+      setStorage(null)
     }
   }, [queryResponse])
 
-  const [updateStorage, { loadingSet, errorSet, data: createdStorage }] =
-    useMutation(SET_STORAGE)
-  const [deleteStorage, { loadingDelete, errorDelete, data: deleteResponse }] =
-    useMutation(DELETE_STORAGE, { variables: { username: props.username } })
-
-  useEffect(() => {
-    if (storage) {
-      const pickup = storage && {
-        longitude: storage.location.coord.longitude,
-        latitude: storage.location.coord.latitude,
-        time: storage.time.getTime(),
-      }
-      console.log(pickup)
-      updateStorage({
-        variables: {
-          username: props.username,
-          pickup,
-        },
-      });
-    }
-  }, [storage])
-
-  async function removeStorage() {
-    setStorage(null)
-    deleteStorage()
+  function onDeleteStorage() {
+    reloadStorage()
   }
 
-  console.log('new storage', createdStorage)
-  console.log('error set: ', errorSet)
-  console.log('loading set', loadingSet)
+  function onCreateStorage(newStorage) {
+    reloadStorage()
+    setPickedLocation(null)
+    setMenuOpen(false)
+  }
 
   // get a location on the map from the user through a promise
   // that resolves when the user clicks on the map
@@ -141,11 +104,6 @@ export default function Home(props) {
     }
   }
 
-  function createStorage(newStorage) {
-    setStorage(newStorage)
-    setPickedLocation(null)
-    setMenuOpen(false)
-  }
   function cancelNewStorage() {
     setPickedLocation(null)
   }
@@ -164,14 +122,10 @@ export default function Home(props) {
 
       {
         locationPromise &&
-        <View style={[styles.modal, style.boxShadow]}>
-          <Text>Tryck på kartan där du vill att dina saker blir upphämtade.</Text>
-          <View style={{alignItems: 'flex-end', marginTop: 10, marginRight: 5}}>
-            <Button onPress={cancelGetMapLocation}>
-              <Text>Avbryt</Text>
-            </Button>
-          </View>
-        </View>
+        <Info
+          cancel={cancelGetMapLocation} 
+          text={'Tryck på kartan där du vill att dina saker blir upphämtade.'}
+        />
       }
 
       <Map
@@ -182,17 +136,20 @@ export default function Home(props) {
         storage={storage}
         marker={pickedLocation}
         myLocation={props.myLocation}
+        setNavigateTo={newNavigateTo => navigateTo = newNavigateTo}
       />
 
       <Menu
         getLocation={getMapLocation}
-        createStorage={createStorage}
+        onCreateStorage={onCreateStorage}
         open={menuIsOpen}
         toggle={() => setMenuOpen(!menuOpen)}
         cancelNewStorage={cancelNewStorage}
         storage={storage}
-        removeStorage={removeStorage}
         logout={props.logout}
+        username={props.username}
+        onDeleteStorage={onDeleteStorage}
+        navigateTo={navigateTo}
       />
     </View>
   );

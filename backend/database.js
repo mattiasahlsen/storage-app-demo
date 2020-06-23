@@ -25,7 +25,6 @@ const promisify = foo =>
 
 async function createStorage({ id, pickup, username }) {
   const storage = {id, pickup, username}
-  console.log('creating storage in database', storage)
   const data = await promisify(callback => {
     docClient.put({
       TableName: 'Storage',
@@ -56,7 +55,6 @@ async function deleteStorage(username) {
       }
     }, callback)
   })
-  console.log('deleted item, ', data)
   return true
 }
 

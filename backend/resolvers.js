@@ -20,7 +20,6 @@ const resolvers = {
     async createStorage(parent, { pickup, username }) {
       const id = randomId()
       const storage = { id, pickup, username }
-      console.log('creating storage', storage)
       const myStorage = await database.createStorage(storage)
       return myStorage
     },

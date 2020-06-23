@@ -7,6 +7,8 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Entypo } from '@expo/vector-icons';
+import { gql } from 'apollo-boost';
+import { useQuery, useMutation } from '@apollo/react-hooks';
 
 import Button, { ShadowButton } from './Button';
 import Text, { MediumText } from './Text';
@@ -16,6 +18,20 @@ import { toTimeString } from '../lib'
 
 const nextHour = new Date(Date.now() + 3600 * 1000)
 nextHour.setMinutes(0, 0, 0)
+
+const SET_STORAGE = gql`
+  mutation setStorage($username: String!, $pickup: PointInput!) {
+    createStorage(username: $username, pickup: $pickup) {
+      id
+      username
+      pickup {
+        longitude
+        latitude
+        time
+      }
+    }
+  }
+`
 
 export default function NewStorage(props) {
   const [time, setTime] = useState(null);
@@ -43,8 +59,24 @@ export default function NewStorage(props) {
     }
   }
 
-  function createStorage() {
-    const storage = { time, location, }
+  // update database when local storage changes
+  const [setStorage, { loading, error, data }] = useMutation(SET_STORAGE)
+
+  async function createStorage() {
+    const storage = { time, location }
+
+    const pickup = storage && {
+      longitude: storage.location.coord.longitude,
+      latitude: storage.location.coord.latitude,
+      time: storage.time.getTime(),
+    }
+    await setStorage({
+      variables: {
+        username: props.username,
+        pickup,
+      },
+    });
+
     props.onComplete(storage)
   }
 
@@ -90,7 +122,7 @@ export default function NewStorage(props) {
         <View style={style.row}>
           {
             location ?
-            <TouchableOpacity onPress={location.navigateTo}>
+            <TouchableOpacity onPress={() => props.navigateTo(location)}>
               <Entypo
                 name={'location-pin'}
                 size={30}

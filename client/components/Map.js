@@ -28,6 +28,10 @@ export default function Map(props) {
       map.animateCamera({ center: coord }, 100)
     }
   }
+  useEffect(() => {
+    props.setNavigateTo && props.setNavigateTo(navigateTo)
+  }, [map])
+
   function mapPress(e) {
     const coord = e.nativeEvent.coordinate
     const location = {
@@ -36,14 +40,12 @@ export default function Map(props) {
     }
     props.onPress && props.onPress(location)
   }
+
   useEffect(() => {
     if (props.storage) {
       props.storage.navigateTo = () => navigateTo(props.storage.location)
     }
   }, [props.storage])
-
-  console.log('in map', props.storage)
- if (props.storage) console.log(props.storage.time)
 
   return (
     <View>

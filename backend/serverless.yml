@@ -9,7 +9,7 @@ provider:
   stage: dev
 
 plugins:
-  - serverless-dynamodb-local
+  #- serverless-dynamodb-local
   - serverless-offline
 
 custom:
@@ -17,15 +17,15 @@ custom:
     httpPort: 4000
     host: 0.0.0.0
     noPrependStageInUrl: true
-  dynamodb:
-    start:
-      port: 8000
-      inMemory: true
-      migrate: true
-      seed: true
-    stages:
-      - dev
-      - test
+  # dynamodb:
+  #   start:
+  #     port: 8000
+  #     inMemory: true
+  #     migrate: true
+  #     seed: true
+  #   stages:
+  #     - dev
+  #     - test
 
 functions:
   hello:
@@ -44,73 +44,21 @@ functions:
           path: /graphql
           method: POST
 
-resources:
-  Resources:
-    StorageTable:
-      Type: 'AWS::DynamoDB::Table'
-      Properties:
-        KeySchema:
-          -
-            AttributeName: username
-            KeyType: HASH
-        AttributeDefinitions:
-          -
-            AttributeName: username
-            AttributeType: S
+# resources:
+#   Resources:
+#     StorageTable:
+#       Type: 'AWS::DynamoDB::Table'
+#       Properties:
+#         KeySchema:
+#           -
+#             AttributeName: username
+#             KeyType: HASH
+#         AttributeDefinitions:
+#           -
+#             AttributeName: username
+#             AttributeType: S
 
-        ProvisionedThroughput:
-          ReadCapacityUnits: 10
-          WriteCapacityUnits: 10
-        TableName: 'Storage'
-
-    ServiceRole:
-      Type: "AWS::IAM::Role"
-      Properties:
-        RoleName: "DynamoRole"
-        AssumeRolePolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            -
-              Effect: "Allow"
-              Principal:
-                Service:
-                  - "lambda.amazonaws.com"
-              Action:
-                - "sts:AssumeRole"
-        Policies:
-          -
-            PolicyName: "Dynamo-ServiceRole-Policy"
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                -
-                  Effect: "Allow"
-                  Action:
-                    - "dynamodb:Query"
-                    - "dynamodb:BatchWriteItem"
-                    - "dynamodb:GetItem"
-                    - "dynamodb:DeleteItem"
-                    - "dynamodb:PutItem"
-                    - "dynamodb:Scan"
-                    - "dynamodb:UpdateItem"
-                  Resource:
-                    - "arn:aws:dynamodb:us-east-1:*:table/Users"
-                    - "arn:aws:dynamodb:us-east-1:*:table/Users/*"
-                    - "arn:aws:dynamodb:us-east-1:*:table/Tweets"
-                    - "arn:aws:dynamodb:us-east-1:*:table/Tweets/*"
-    XrayLambdaRolePolicy:
-      Type: "AWS::IAM::Policy"
-      Properties:
-        PolicyName: "xray-policy"
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            -
-              Effect: "Allow"
-              Action:
-                - "xray:PutTraceSegments"
-                - "xray:PutTelemetryRecords"
-              Resource:
-                - "*"
-        Roles:
-          - Ref: ServiceRole
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
+#         TableName: 'StorageProd'

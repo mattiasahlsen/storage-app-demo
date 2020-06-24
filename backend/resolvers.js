@@ -1,4 +1,4 @@
-const database = require('./database')
+const database = require('./inMemory')
 
 const randomId = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'

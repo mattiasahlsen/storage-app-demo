@@ -4,14 +4,16 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "start": "serverless dynamodb install && env-cmd -f ../config/.env.local serverless offline start",
+    "start-old": "serverless dynamodb install && env-cmd -f ../config/.env.local serverless offline start",
+    "start": "env-cmd -f ../config/.env.local serverless offline start",
+    "deploy-prod": "env-cmd -f ../config/.env.prod serverless --stage=prod deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "apollo-server-lambda": "^2.14.4",
-    "aws-sdk": "^2.697.0",
+    "aws-sdk": "^2.702.0",
     "aws-xray-sdk": "^3.1.0",
     "graphql": "^15.1.0",
     "graphql-tag": "^2.10.3",

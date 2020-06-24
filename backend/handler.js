@@ -16,6 +16,9 @@ module.exports.graphqlHandler = server.createHandler({
   },
 })
 module.exports.hello = async e => {
-  console.log('endpoint: ', process.env.REACT_APP_GRAPHQL_ENDPOINT)
-  return { statusCode: 200, body: JSON.stringify({ message: 'hello' })}
+  return { statusCode: 200, body: JSON.stringify({
+    title: 'Hello endpoint',
+    message: 'hello',
+    endpoint: process.env.REACT_APP_GRAPHQL_ENDPOINT
+  })}
 }

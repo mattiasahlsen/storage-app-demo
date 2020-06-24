@@ -21,10 +21,11 @@ import Login from './screens/Login'
 
 import style, { colors } from './styles'
 
-// NOT YET USED
+const URI = 'https://kc70dxb4y7.execute-api.us-east-1.amazonaws.com/prod/graphql'
 const client = new ApolloClient({
-  uri: 'http://192.168.72.37:4000/graphql',
+  uri: URI,
 });
+if (__DEV__) console.log('graphql URI: ', URI)
 
 const USERNAME_KEY = 'username'
 
